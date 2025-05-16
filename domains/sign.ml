@@ -1,3 +1,14 @@
+(* 
+   Semantics and Applications to Verification course's project
+   École Normale Supérieur
+
+   Authors : 
+     - Ilian Woerly : ilian.woerly@universite-paris-saclay.fr
+     - Alexis Pocquet : alexis.pocquet@universite-paris-saclay.fr
+ *)
+
+(* Implementation of the sign value domain *)
+
 open Frontend.AbstractSyntax
 open States
 
@@ -110,9 +121,9 @@ let bwd_unary _ _ _ = failwith "todo"
 
 let bwd_binary _ _ _ _ = failwith "todo"
 
-let widen _ _ = failwith "todo"
+let widen = join
 
-let narrow _ _ = failwith "todo"
+let narrow = meet
 
 let leq lhs rhs =
   match lhs, rhs with

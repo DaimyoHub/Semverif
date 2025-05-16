@@ -1,85 +1,11 @@
-(*
-  Cours "Sémantique et Application à la Vérification de programmes"
-
-  Ecole normale supérieure, Paris, France / CNRS / INRIA
-*)
-
-open Frontend
+open Domain
+open Value_domain
+open Frontend.ControlFlowGraph
 open Frontend.AbstractSyntax
-open! ControlFlowGraph
-open Io
 
-(* Signature for the variables *)
+module Env = VarMap
 
-module type VARS = sig
-  val support : var list
-end
-
-(*
-  Signature of abstract domains representing sets of envrionments (for instance: a map
-  from variables to their bounds).
- *)
-
-module type DOMAIN = sig
-  (* type of abstract elements *)
-  (* an element of type t abstracts a set of mappings from variables to integers *)
-  type t
-
-  (* initial environment, with all variables initialized to 0 *)
-  val init : t
-
-  (* empty set of environments *)
-  val bottom : t
-
-  (* assign an integer expression to a variable *)
-  val assign : t -> var -> int_expr -> t
-
-  (* filter environments to keep only those satisfying the boolean expression *)
-  val guard : t -> bool_expr -> t
-
-  (* abstract join *)
-  val join : t -> t -> t
-
-  (* abstract meet *)
-  val meet : t -> t -> t
-
-  (* widening *)
-  val widen : t -> t -> t
-
-  (* narrowing *)
-  val narrow : t -> t -> t
-
-  (* whether an abstract element is included in another one *)
-  val leq : t -> t -> bool
-
-  (* whether the abstract element represents the empty set *)
-  val is_bottom : t -> bool
-
-  (* prints *)
-  val pp : Format.formatter -> t -> unit
-
-  (* IO operations for the reduced product.
-
-    The primitive `extract_*` emits a constraint on the corresponding communication 
-    channel, whereas `refine_*` refines a constraint using the corresponding
-    communication channel. *)
-
-  (* Transforms a domain's state into an input state *)
-  val extract_in  : t -> In.t  -> In.t
-
-  (* Refines a domain's state thanks to the input state *)
-  val refine_in   : t -> In.t  -> t
-
-  (* Transforms a domains's state into an output state *)
-  val extract_out : t -> Out.t -> Out.t
-
-  (* Refines a domain's state thanks to the input state *)
-  val refine_out  : t -> Out.t -> t
-end
-
-module Env = ControlFlowGraph.VarMap
-
-module Non_relational (D : Value_domain.VALUE_DOMAIN) = 
+module Make (D : Value_domain.VALUE_DOMAIN) (V : VARS) = 
  struct 
   type t = D.t Env.t
 

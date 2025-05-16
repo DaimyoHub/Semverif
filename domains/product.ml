@@ -1,8 +1,16 @@
-open Io
+(* 
+   Semantics and Applications to Verification course's project
+   École Normale Supérieur
+
+   Authors : 
+     - Ilian Woerly : ilian.woerly@universite-paris-saclay.fr
+     - Alexis Pocquet : alexis.pocquet@universite-paris-saclay.fr
+ *)
+
+(* Reduced product's implementation *)
+
 open Domain
 open States
-
-module NR_interval = Non_relational (Interval)
 
 type t = prod
 
@@ -17,6 +25,8 @@ let const z = Prd { intvl = Interval.const z; sign = Sign.const z }
 let rand a b = Prd { intvl = Interval.rand a b; sign = Sign.rand a b }
 
 let refine p =
+  (* For each abstract state in the product state, we find the most precise one and we 
+     refine others so that they become homomorphically smaller then the former *)
   let intvl_of_sign = function
     | Sbot -> Ibot
     | Stop -> Itop
@@ -95,9 +105,15 @@ let meet lhs rhs =
    I refine the right operand, assuming that it corresponds to F#(x_n) and I do not
    refine after widening *)
 let widen lhs rhs =
-  let _rhs' = refine rhs in
-  (* apply widening on lhs and rhs' *)
-  failwith "todo"
+  let rhs' = refine rhs in
+  match lhs, rhs' with
+  | _, Pbot -> Pbot
+  | Pbot, _ -> rhs'
+  | Prd lhs, Prd rhs ->
+      Prd {
+        intvl = Interval.widen lhs.intvl rhs.intvl;
+        sign = Sign.widen lhs.sign rhs.sign
+      }
 
 let narrow lhs rhs = failwith "todo"
 
@@ -106,6 +122,10 @@ let leq lhs rhs =
   | Pbot, _ -> true
   | Prd _, Pbot -> false
   | Prd lhs, Prd rhs -> Interval.leq lhs.intvl rhs.intvl && Sign.leq lhs.sign rhs.sign
+
+let bwd_unary _ _ _ = failwith "todo"
+
+let bwd_binary _ _ _ _ = failwith "todo"
 
 let is_bottom = (=) Pbot
 

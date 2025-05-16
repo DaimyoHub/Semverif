@@ -1,5 +1,15 @@
+(* 
+   Semantics and Applications to Verification course's project
+   École Normale Supérieur
+
+   Authors : 
+     - Ilian Woerly : ilian.woerly@universite-paris-saclay.fr
+     - Alexis Pocquet : alexis.pocquet@universite-paris-saclay.fr
+ *)
+
+(* Interval value domain implementation *)
+
 open Frontend.AbstractSyntax
-open Io
 open States
 
 (* This module contains some utilitaries to manipulate extended signed integers *)
@@ -202,7 +212,9 @@ let narrow lhs rhs = failwith "todo"
 let widen lhs rhs =
   match to_top lhs, to_top rhs with
   | Itop, rhs -> rhs
-  | Ibot, _ | _, Itop | _, Ibot -> Itop
+  | _, Ibot -> Ibot
+  | Ibot, _ -> Itop
+  | _, Itop -> Itop
   | Intvl (a, b), Intvl (c, d) ->
       let l_bound =
         if a <= c then a else Ninf and r_bound = if b >= d then b else Pinf

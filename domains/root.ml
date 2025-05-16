@@ -1,15 +1,14 @@
-open Domain
+(* 
+   Semantics and Applications to Verification course's project
+   École Normale Supérieur
 
-module Sign : DOMAIN =
- struct
-  module NR_sign = Non_relational (Sign)
-  include NR_sign
+   Authors : 
+     - Ilian Woerly : ilian.woerly@universite-paris-saclay.fr
+     - Alexis Pocquet : alexis.pocquet@universite-paris-saclay.fr
+ *)
 
-  let extract_in s in_s = failwith "todo"
+(* The iterator should use this domain to compute abstract states of the program *)
 
-  let refine_in s in_s = failwith "todo"
-
-  let extract_out s out_s = failwith "todo"
-
-  let refine_out s out_s = failwith "todo"
- end
+include Non_relational.Make
+  (Product)
+  (struct let support = [] end)

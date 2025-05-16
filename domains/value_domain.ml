@@ -4,10 +4,8 @@
   Ecole normale supérieure, Paris, France / CNRS / INRIA
 *)
 
-(*
-  Signature of abstract domains representing sets of integers
-  (for instance: constants or intervals).
- *)
+(* Signature of abstract domains representing sets of integers (for instance: constants
+   or intervals) *)
 
 open Frontend
 open AbstractSyntax
