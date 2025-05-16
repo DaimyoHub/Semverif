@@ -1,0 +1,7 @@
+(library
+  (name domains)
+  (libraries zarith frontend)
+  (flags -w +a-4-6-7-9-27-29-32..42-44-45-48-50-60-70 )
+  (inline_tests)
+  (preprocess (pps ppx_inline_test)))
+
