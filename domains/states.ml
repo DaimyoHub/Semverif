@@ -17,7 +17,7 @@ type intvl = Intvl of extended_z * extended_z | Ibot | Itop
 type sign = Stop | Sbot | Pos | Neg | Nul
 
 (* Congruence abstract state's type *)
-type congr = Cbot | Ctop | Mod of int
+type congr = Cbot | Ctop | Cgr of int * int
 
 (* Reduced product abstract state's type *)
 type prod = Prd of { intvl : intvl; sign : sign } | Pbot
