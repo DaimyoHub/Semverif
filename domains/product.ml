@@ -27,6 +27,9 @@ let rand a b =
   Prd { intvl = Interval.rand a b; sign = Sign.rand a b; congr = Congruence.rand a b }
 
 let refine p =
+  (* We can refine an interval thanks to congruences. More preciselly, the lower bound 
+     can be assimilated to the least element of the ring greater than A, dually, the
+     upper bound B can be assimilated to the greatest element of the ring less than B *)
   let rec refine_intvl_with_congr intvl congr =
     let rec sup_mult n a b limit =
       match limit with
@@ -46,14 +49,14 @@ let refine p =
     in
     match congr with
     | Cgr (a, b) -> begin
+        let sup_mult n l = Z (Z.of_int (sup_mult (Z.to_int n) a b l))
+        and inf_mult m l = Z (Z.of_int (inf_mult (Z.to_int m) a b l))
+        in
         match intvl with
-        | Intvl (Z n, Z m) -> Intvl (
-            Z (Z.of_int (sup_mult (Z.to_int n) a b (Some (Z.to_int m)))),
-            Z (Z.of_int (inf_mult (Z.to_int m) a b (Some (Z.to_int n)))))
-        | Intvl (Z n, Pinf) ->
-            Intvl (Z (Z.of_int (sup_mult (Z.to_int n) a b None)), Pinf)
-        | Intvl (Ninf, Z n) ->
-            Intvl (Ninf, Z (Z.of_int (inf_mult (Z.to_int n) a b None)))
+        | Intvl (Z n, Z m) ->
+            Intvl (sup_mult n (Some (Z.to_int m)), inf_mult m (Some (Z.to_int n)))
+        | Intvl (Z n, Pinf) -> Intvl (sup_mult n None, Pinf)
+        | Intvl (Ninf, Z n) -> Intvl (Ninf, inf_mult n None)
         | _ -> intvl
       end
     | Ctop -> refine_intvl_with_congr intvl (Cgr (1, 0))
