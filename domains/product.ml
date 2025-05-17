@@ -14,15 +14,17 @@ open States
 
 type t = prod
 
-let init = Prd { intvl = Itop; sign = Stop }
+let init = Prd { intvl = Ibot; sign = Sbot; congr = Cbot }
 
-let top = Prd { intvl = Itop; sign = Stop }
+let top = Prd { intvl = Itop; sign = Stop; congr = Ctop }
 
 let bottom = Pbot
 
-let const z = Prd { intvl = Interval.const z; sign = Sign.const z }
+let const z =
+  Prd { intvl = Interval.const z; sign = Sign.const z; congr = Congruence.const z }
 
-let rand a b = Prd { intvl = Interval.rand a b; sign = Sign.rand a b }
+let rand a b =
+  Prd { intvl = Interval.rand a b; sign = Sign.rand a b; congr = Congruence.rand a b }
 
 let refine p =
   (* For each abstract state in the product state, we find the most precise one and we 
@@ -44,16 +46,20 @@ let refine p =
         else Stop
   in
   match p with
-  | Prd { intvl; sign } ->
+  | Prd { intvl; sign; congr } ->
       if Sign.leq sign (sign_of_intvl intvl) then
-        Prd { intvl = Interval.meet (intvl_of_sign sign) intvl; sign }
+        Prd { intvl = Interval.meet (intvl_of_sign sign) intvl; sign; congr }
       else p
   | _ -> Pbot
 
 let unary p op =
   let p' =
     match p with
-    | Prd p -> Prd { intvl = Interval.unary p.intvl op; sign = Sign.unary p.sign op }
+    | Prd p -> Prd {
+        intvl = Interval.unary p.intvl op;
+        sign = Sign.unary p.sign op;
+        congr = Congruence.unary p.congr op;
+      }
     | Pbot -> Pbot
   in refine p' (* seems useless to refine here but why not *)
 
@@ -62,42 +68,51 @@ let binary lhs rhs op =
     match lhs, rhs with
     | Prd lhs, Prd rhs -> Prd {
         intvl = Interval.binary lhs.intvl rhs.intvl op;
-        sign = Sign.binary lhs.sign rhs.sign op
+        sign = Sign.binary lhs.sign rhs.sign op;
+        congr = Congruence.binary lhs.congr rhs.congr op;
       }
     | _ -> Pbot (* should bottom strictness hold for the product domain ? (i think so) *)
   in refine p
 
 let compare lhs rhs op =
-  let ic = Interval.compare and sc = Sign.compare in
+  let ic = Interval.compare and sc = Sign.compare and cc = Congruence.compare in
   match
     (match lhs, rhs with
-    | Prd lhs, Prd rhs -> Some (ic lhs.intvl rhs.intvl op, sc rhs.sign rhs.sign op)
-    | Pbot, Prd p -> Some (ic Ibot p.intvl op, sc Sbot p.sign op)
-    | Prd p, Pbot -> Some (ic p.intvl Ibot op, sc p.sign Sbot op)
+    | Prd lhs, Prd rhs -> Some (
+        ic lhs.intvl rhs.intvl op, sc rhs.sign rhs.sign op, cc lhs.congr rhs.congr op)
+    | Pbot, Prd p -> Some (ic Ibot p.intvl op, sc Sbot p.sign op, cc Cbot p.congr op)
+    | Prd p, Pbot -> Some (ic p.intvl Ibot op, sc p.sign Sbot op, cc p.congr Cbot op)
     | Pbot, Pbot -> None)
   with
-  | Some ((a, b), (c, d)) -> Prd { intvl = a; sign = c }, Prd { intvl = b; sign = d }
+  | Some ((a, b), (c, d), (e, f)) ->
+      Prd { intvl = a; sign = c; congr = e }, Prd { intvl = b; sign = d; congr = f }
   | None -> Pbot, Pbot
 
 let join lhs rhs =
-  let ij = Interval.join and sj = Sign.join in
+  let ij = Interval.join and sj = Sign.join and cj = Congruence.join in
   let p =
     match lhs, rhs with
-    | Prd lhs, Prd rhs ->
-        Prd { intvl = ij lhs.intvl rhs.intvl; sign = sj lhs.sign rhs.sign }
+    | Prd lhs, Prd rhs -> Prd {
+        intvl = ij lhs.intvl rhs.intvl; 
+        sign = sj lhs.sign rhs.sign; 
+        congr = cj lhs.congr rhs.congr;
+      }
     | Pbot, Prd p | Prd p, Pbot ->
-        Prd { intvl = ij Ibot p.intvl; sign = sj Sbot p.sign }
+        Prd { intvl = ij Ibot p.intvl; sign = sj Sbot p.sign; congr = cj Cbot p.congr }
     | Pbot, Pbot -> Pbot
   in refine p
 
 let meet lhs rhs =
-  let im = Interval.meet and sm = Sign.meet in
+  let im = Interval.meet and sm = Sign.meet and cm = Congruence.meet in
   let p =
     match lhs, rhs with
-    | Prd lhs, Prd rhs ->
-        Prd { intvl = im lhs.intvl rhs.intvl; sign = sm lhs.sign rhs.sign }
+    | Prd lhs, Prd rhs -> Prd {
+        intvl = im lhs.intvl rhs.intvl;
+        sign = sm lhs.sign rhs.sign;
+        congr = cm lhs.congr rhs.congr;
+      }
     | Pbot, Prd p | Prd p, Pbot ->
-        Prd { intvl = im Ibot p.intvl; sign = sm Sbot p.sign }
+        Prd { intvl = im Ibot p.intvl; sign = sm Sbot p.sign; congr = cm Cbot p.congr }
     | Pbot, Pbot -> Pbot
   in refine p
 
@@ -109,11 +124,11 @@ let widen lhs rhs =
   match lhs, rhs' with
   | _, Pbot -> Pbot
   | Pbot, _ -> rhs'
-  | Prd lhs, Prd rhs ->
-      Prd {
-        intvl = Interval.widen lhs.intvl rhs.intvl;
-        sign = Sign.widen lhs.sign rhs.sign
-      }
+  | Prd lhs, Prd rhs -> Prd {
+      intvl = Interval.widen lhs.intvl rhs.intvl;
+      sign = Sign.widen lhs.sign rhs.sign;
+      congr = Congruence.widen lhs.congr rhs.congr;
+    }
 
 let narrow lhs rhs = failwith "todo"
 
@@ -121,7 +136,10 @@ let leq lhs rhs =
   match lhs, rhs with
   | Pbot, _ -> true
   | Prd _, Pbot -> false
-  | Prd lhs, Prd rhs -> Interval.leq lhs.intvl rhs.intvl && Sign.leq lhs.sign rhs.sign
+  | Prd lhs, Prd rhs ->
+         Interval.leq lhs.intvl rhs.intvl
+      && Sign.leq lhs.sign rhs.sign
+      && Congruence.leq lhs.congr rhs.congr
 
 let bwd_unary _ _ _ = failwith "todo"
 

@@ -20,4 +20,4 @@ type sign = Stop | Sbot | Pos | Neg | Nul
 type congr = Cbot | Ctop | Cgr of int * int
 
 (* Reduced product abstract state's type *)
-type prod = Prd of { intvl : intvl; sign : sign } | Pbot
+type prod = Prd of { intvl : intvl; sign : sign; congr : congr } | Pbot
