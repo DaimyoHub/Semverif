@@ -27,6 +27,38 @@ let rand a b =
   Prd { intvl = Interval.rand a b; sign = Sign.rand a b; congr = Congruence.rand a b }
 
 let refine p =
+  let rec refine_intvl_with_congr intvl congr =
+    let rec sup_mult n a b limit =
+      match limit with
+      | Some l ->
+          if n >= l then l
+          else if n mod a <> b then sup_mult (n + 1) a b limit
+          else n
+      | None -> sup_mult (n + 1) a b limit
+    in
+    let rec inf_mult n a b limit =
+      match limit with
+      | Some l ->
+          if n <= l then l
+          else if n mod a <> b then sup_mult (n - 1) a b limit
+          else n
+      | None -> sup_mult (n - 1) a b limit
+    in
+    match congr with
+    | Cgr (a, b) -> begin
+        match intvl with
+        | Intvl (Z n, Z m) -> Intvl (
+            Z (Z.of_int (sup_mult (Z.to_int n) a b (Some (Z.to_int m)))),
+            Z (Z.of_int (inf_mult (Z.to_int m) a b (Some (Z.to_int n)))))
+        | Intvl (Z n, Pinf) ->
+            Intvl (Z (Z.of_int (sup_mult (Z.to_int n) a b None)), Pinf)
+        | Intvl (Ninf, Z n) ->
+            Intvl (Ninf, Z (Z.of_int (inf_mult (Z.to_int n) a b None)))
+        | _ -> intvl
+      end
+    | Ctop -> refine_intvl_with_congr intvl (Cgr (1, 0))
+    | Cbot -> intvl
+  in 
   (* For each abstract state in the product state, we find the most precise one and we 
      refine others so that they become homomorphically smaller then the former *)
   let intvl_of_sign = function
@@ -47,9 +79,10 @@ let refine p =
   in
   match p with
   | Prd { intvl; sign; congr } ->
-      if Sign.leq sign (sign_of_intvl intvl) then
-        Prd { intvl = Interval.meet (intvl_of_sign sign) intvl; sign; congr }
-      else p
+      if Sign.leq sign (sign_of_intvl intvl) then Prd {
+        intvl = refine_intvl_with_congr (Interval.meet (intvl_of_sign sign) intvl) congr;
+        sign; congr
+      } else p
   | _ -> Pbot
 
 let unary p op =
