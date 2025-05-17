@@ -135,3 +135,83 @@ let%test "sign_divide_bot" =
   && binary Sbot Nul AST_DIVIDE  = Sbot
   && binary Sbot Stop AST_DIVIDE = Sbot
   && binary Sbot Sbot AST_DIVIDE = Sbot
+
+(* Checking the product's refinement function *)
+let%test "refine_with_sign_and_congr_top" =
+  let open Product in
+  let ref = Product.refine (Prd {
+      intvl = Interval.rand (Z.of_int (-1)) Z.one;
+      sign = Neg;
+      congr = Ctop;
+    })
+  in match ref with
+  | Prd p -> p.intvl = Interval.const (Z.of_int (-1))
+  | _ -> false
+
+let%test "refine_with_congr_and_sign_top" =
+  let open Product in
+  let ref = Product.refine (Prd {
+      intvl = Interval.rand (Z.of_int (-3)) (Z.of_int 3);
+      sign = Stop;
+      congr = Cgr (2, 0);
+    })
+  in match ref with
+  | Prd p -> p.intvl = Interval.rand (Z.of_int (-2)) (Z.of_int 2)
+  | _ -> false
+
+let%test "refine_with_sign_and_congr_bot" =
+  let open Product in
+  let ref = Product.refine (Prd {
+      intvl = Interval.rand (Z.of_int (-1)) Z.one;
+      sign = Neg;
+      congr = Cbot;
+    })
+  in match ref with
+  | Prd p -> p.intvl = Interval.const (Z.of_int (-1))
+  | _ -> false
+
+let%test "refine_with_congr_and_sign_bot" =
+  let open Product in
+  let ref = Product.refine (Prd {
+      intvl = Interval.rand (Z.of_int (-3)) (Z.of_int 3);
+      sign = Sbot;
+      congr = Cgr (2, 0);
+    })
+  in match ref with
+  | Prd p -> p.intvl = Interval.rand (Z.of_int (-2)) (Z.of_int 2)
+  | _ -> false
+
+let%test "refine_with_sign_and_congr" =
+  let open Product in
+  let ref = Product.refine (Prd {
+      intvl = Interval.rand (Z.of_int (-3)) (Z.of_int 3);
+      sign = Neg;
+      congr = Cgr (2, 0);
+    })
+  in match ref with
+  | Prd p -> p.intvl = Interval.const (Z.of_int (-2))
+  | _ -> false
+
+let%test "refine_with_bot" =
+  let open Product in
+  let ref = Product.refine (Prd {
+      intvl = Interval.rand (Z.of_int (-1)) Z.one;
+      sign = Sbot;
+      congr = Cbot;
+    })
+  in
+  match ref with
+  | Prd p -> p.intvl = Interval.rand (Z.of_int (-1)) Z.one
+  | _ -> false
+
+let%test "refine_with_top" =
+  let open Product in
+  let ref = Product.refine (Prd {
+      intvl = Interval.rand (Z.of_int (-1)) Z.one;
+      sign = Stop;
+      congr = Ctop;
+    })
+  in
+  match ref with
+  | Prd p -> p.intvl = Interval.rand (Z.of_int (-1)) Z.one
+  | _ -> false

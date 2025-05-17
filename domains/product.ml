@@ -26,31 +26,32 @@ let const z =
 let rand a b =
   Prd { intvl = Interval.rand a b; sign = Sign.rand a b; congr = Congruence.rand a b }
 
+(* The sign domain and the congruence domain both compute properties that can be used to
+   refine the computations of the interval domain. *)
 let refine p =
-  (* We can refine an interval thanks to congruences. More preciselly, the lower bound 
-     can be assimilated to the least element of the ring greater than A, dually, the
-     upper bound B can be assimilated to the greatest element of the ring less than B *)
+  (* The congruence domain could thin an interval, troncating slices from it, formed by
+     its bounds. More preciselly, given an interval [A; B] the lower bound may be 
+     refined to the least element of the ring greater than A, dually, the upper bound B
+     may be refined to the greatest element of the ring less than B *)
   let rec refine_intvl_with_congr intvl congr =
-    let rec sup_mult n a b limit =
+    (* [nearest_mult n a b limit ~sup: b] computes the nearest number of the ring aZ+b
+       which is either greater than n (if sup is true) or less than n (if sup is false).
+       The limit is the number not to exceed. For instance, [nearest 2 4 0 3 ~sup: true]
+       gives the number 3, as the nearest multiple of 4 greater than 2 is greater than
+       the limit 3. *)
+    let rec nearest_mult n a b limit ~sup =
+      let cop, bop = if sup then (>=), (+) else (<=), (-) in
       match limit with
-      | Some l ->
-          if n >= l then l
-          else if n mod a <> b then sup_mult (n + 1) a b limit
+      | Some l -> 
+          if cop n l then l
+          else if n mod a <> b then nearest_mult (bop n 1) a b limit sup
           else n
-      | None -> sup_mult (n + 1) a b limit
-    in
-    let rec inf_mult n a b limit =
-      match limit with
-      | Some l ->
-          if n <= l then l
-          else if n mod a <> b then sup_mult (n - 1) a b limit
-          else n
-      | None -> sup_mult (n - 1) a b limit
+      | None -> nearest_mult (bop n 1) a b limit sup
     in
     match congr with
     | Cgr (a, b) -> begin
-        let sup_mult n l = Z (Z.of_int (sup_mult (Z.to_int n) a b l))
-        and inf_mult m l = Z (Z.of_int (inf_mult (Z.to_int m) a b l))
+        let sup_mult n l = Z (Z.of_int (nearest_mult (Z.to_int n) a b l ~sup: true))
+        and inf_mult m l = Z (Z.of_int (nearest_mult (Z.to_int m) a b l ~sup: false))
         in
         match intvl with
         | Intvl (Z n, Z m) ->
@@ -59,33 +60,28 @@ let refine p =
         | Intvl (Ninf, Z n) -> Intvl (Ninf, inf_mult n None)
         | _ -> intvl
       end
-    | Ctop -> refine_intvl_with_congr intvl (Cgr (1, 0))
+    | Ctop ->
+        let refined_intvl = refine_intvl_with_congr intvl (Cgr (1, 0)) in
+        if Interval.leq refined_intvl intvl && intvl <> Ibot then refined_intvl
+        else intvl
     | Cbot -> intvl
-  in 
-  (* For each abstract state in the product state, we find the most precise one and we 
-     refine others so that they become homomorphically smaller then the former *)
-  let intvl_of_sign = function
-    | Sbot -> Ibot
-    | Stop -> Itop
-    | Neg -> Intvl (Ninf, Interval.Util.neg (Z Z.one))
-    | Pos -> Intvl (Z Z.one, Pinf)
-    | Nul -> Intvl (Z Z.zero, Z Z.zero)
   in
-  let sign_of_intvl = function
-    | Ibot -> Sbot
-    | Itop -> Stop
-    | intvl -> 
-        if Interval.leq intvl (intvl_of_sign Neg) then Neg
-        else if Interval.leq intvl (intvl_of_sign Pos) then Pos
-        else if Interval.leq intvl (intvl_of_sign Nul) then Nul
-        else Stop
+  (* The sign domain could troncate an interval according to a computed sign. *)
+  let refine_intvl_with_sign intvl sign =
+    let intvl_of_sign = function
+      | Sbot -> Ibot
+      | Stop -> Itop
+      | Neg -> Intvl (Ninf, Interval.Util.neg (Z Z.one))
+      | Pos -> Intvl (Z Z.one, Pinf)
+      | Nul -> Intvl (Z Z.zero, Z Z.zero)
+    in let refined_intvl = Interval.meet (intvl_of_sign sign) intvl in
+    if Interval.leq refined_intvl intvl && refined_intvl <> Ibot then refined_intvl else intvl
   in
   match p with
-  | Prd { intvl; sign; congr } ->
-      if Sign.leq sign (sign_of_intvl intvl) then Prd {
-        intvl = refine_intvl_with_congr (Interval.meet (intvl_of_sign sign) intvl) congr;
-        sign; congr
-      } else p
+  | Prd { intvl; sign; congr } -> Prd {
+      intvl = refine_intvl_with_congr (refine_intvl_with_sign intvl sign) congr;
+      sign; congr
+    }
   | _ -> Pbot
 
 let unary p op =
