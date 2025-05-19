@@ -9,8 +9,9 @@
  (action  (with-stdout-to %{targets} (run menhir --compile-errors %{deps}))))
 
 (menhir
-  (flags --table)
-  (modules parser))
+  (flags --table --dump)
+  (modules parser)
+  (infer true))
 
 (ocamllex
   (modules lexer))

@@ -9,9 +9,11 @@ module Make (D : Value_domain.VALUE_DOMAIN) (V : VARS) =
  struct 
   type t = D.t Env.t
 
-  let init = Env.empty
+  let init = List.fold_left (fun res var -> Env.add var D.bottom res) Env.empty V.support
 
   let bottom = Env.empty
+
+  let get_constraint env var = Env.find var env
 
   let rec eval env = function
     | CFG_int_const z -> D.const z
@@ -44,6 +46,7 @@ module Make (D : Value_domain.VALUE_DOMAIN) (V : VARS) =
       lhs rhs
 
   let rec guard env = function
+    | CFG_bool_var var -> if D.is_bottom (Env.find var env) then bottom else env
     | CFG_bool_const b -> if b then env else bottom
     | CFG_bool_rand -> env
     | CFG_compare (bop, lhs, rhs) ->
@@ -54,6 +57,7 @@ module Make (D : Value_domain.VALUE_DOMAIN) (V : VARS) =
     | CFG_bool_binary (AST_OR, lhs, rhs) -> join (guard env lhs) (guard env rhs)
 
   and compl env = function
+    | CFG_bool_var var -> if D.is_bottom (Env.find var env) then env else bottom
     | CFG_bool_const b -> if b then bottom else env
     | CFG_bool_rand -> env
     | CFG_compare (bop, lhs, rhs) ->
@@ -87,8 +91,13 @@ module Make (D : Value_domain.VALUE_DOMAIN) (V : VARS) =
   let is_bottom = Env.is_empty
 
   let pp fmt env =
+    print_endline "{\n";
     Env.iter
-      (fun var state -> Format.fprintf fmt "%s: " var.var_name; D.pp fmt state)
-      env
+      (fun var state ->
+        Format.fprintf fmt "\t%s: " var.var_name;
+        D.pp fmt state;
+        print_endline "")
+      env;
+    print_endline "}"
  end
 

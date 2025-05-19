@@ -21,6 +21,7 @@ let _ =
      (* types *)
      "void",      TOK_VOID;
      "int",       TOK_INT;
+     "bool",      TOK_BOOL; (* for partitioning purpose *)
 
      (* constants *)
      "true",      TOK_TRUE;
@@ -90,6 +91,7 @@ rule token = parse
 | ":"    { TOK_COLON }
 | ","    { TOK_COMMA }
 | "="    { TOK_EQUAL }
+| "=b"   { TOK_EQUAL_BOOL }
 | "++"   { TOK_PLUS_PLUS }
 | "--"   { TOK_MINUS_MINUS }
 | "+="   { TOK_PLUS_EQUAL }
@@ -97,6 +99,8 @@ rule token = parse
 | "*="   { TOK_STAR_EQUAL }
 | "/="   { TOK_DIVIDE_EQUAL }
 | "%="   { TOK_PERCENT_EQUAL }
+| "&&="  { TOK_AND_EQUAL }
+| "||="  { TOK_OR_EQUAL }
 
 
 (* literals *)

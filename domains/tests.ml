@@ -11,6 +11,7 @@
    course or in the given resources *)
 
 open Frontend.AbstractSyntax
+open Frontend.ControlFlowGraph
 open States
 
 (* Checking soundness of binary operation PLUS on the sign domain *)
@@ -215,3 +216,34 @@ let%test "refine_with_top" =
   match ref with
   | Prd p -> p.intvl = Interval.rand (Z.of_int (-1)) Z.one
   | _ -> false
+
+(*
+type var =
+  { var_id: int (* unique variable identifier *)
+  ; var_name: id (* original name, in the program *)
+  ; var_type: typ (* variable type *)
+  ; var_pos: extent (* position of the variable declaration *) }
+ *)
+let%test "partitioning" =
+  let x = { var_id = 0; var_name = "x"; var_type = AST_TYP_INT; var_pos = extent_unknown }
+  in
+  let module R = Non_relational.Make (Product) (struct let support = [x] end) in
+  let module Parts = Partition.Make (R) in
+  
+  let parts = Parts.init in
+  let parts = Parts.assign parts x (CFG_int_rand (Z.zero, Z.of_int 100)) in
+  let parts = Parts.guard parts (CFG_compare (AST_GREATER, CFG_int_var x, CFG_int_const (Z.of_int 20))) in
+  let e = Parts.get_current_partition parts in
+  R.pp Format.std_formatter e;
+  let parts = Parts.screenshot_environment parts "b" true in
+  let parts = Parts.guard parts (CFG_compare (AST_LESS_EQUAL, CFG_int_var x, CFG_int_const (Z.of_int 20))) in
+
+  (*let e = Parts.get_current_partition parts in
+  R.pp Format.std_formatter e;*)
+
+  Parts.add_boolean_condtion "b" true;
+
+  let e = Parts.get_current_partition parts in
+  R.pp Format.std_formatter e;
+
+  true

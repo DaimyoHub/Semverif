@@ -119,4 +119,4 @@ let widen lhs rhs = Ctop
 
 let is_bottom = (=) Cbot
 
-let pp _ _ = failwith ""
+let pp fmt c = ()

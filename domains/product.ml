@@ -179,4 +179,13 @@ let bwd_binary _ _ _ _ = failwith "todo"
 
 let is_bottom = (=) Pbot
 
-let pp _ _ = failwith "todo"
+let pp fmt p =
+    match p with
+    | Pbot -> Format.fprintf fmt "bottom"
+    | Prd { intvl; sign; congr } -> begin
+        Format.fprintf fmt "{";
+        Interval.pp fmt intvl;
+        Sign.pp fmt sign;
+        Congruence.pp fmt congr;
+        Format.fprintf fmt "}"
+      end

@@ -110,6 +110,7 @@ let print_var fmt v =
 let string_of_type t =
   match t with
   | AST_TYP_INT -> "int"
+  | AST_TYP_BOOL -> "bool"
 
 
 let rec print_int_expr fmt e =
@@ -169,6 +170,8 @@ and print_bool_expr fmt e =
 
   | CFG_bool_rand -> Format.fprintf fmt "brand"
 
+  | CFG_bool_var v -> print_var fmt v
+
 
 
 (* instructions *)
@@ -179,6 +182,7 @@ let print_inst fmt i =
   match i with
   | CFG_skip msg -> Format.fprintf fmt "%s" msg
   | CFG_assign (v,e) -> Format.fprintf fmt "%a = %a" print_var v print_int_expr e
+  | CFG_assign_bool (v,e) -> Format.fprintf fmt "%a = %a" print_var v print_bool_expr e
   | CFG_guard b -> Format.fprintf fmt "%a ?" print_bool_expr b
   | CFG_assert (b, _) -> Format.fprintf fmt "assert %a" print_bool_expr b
   | CFG_call f -> Format.fprintf fmt "call %s" f.func_name

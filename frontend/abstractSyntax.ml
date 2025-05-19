@@ -35,6 +35,9 @@ type typ =
   (* mathematical integers, in Z *)
   | AST_TYP_INT
 
+  (* for partitioning purpose *)
+  | AST_TYP_BOOL
+
 
 (* unary expression operators *)
 
@@ -106,6 +109,9 @@ type bool_expr =
   (* non-deterministic choice *)
   | AST_bool_rand
 
+  (* for partitioning purpose *)
+  | AST_bool_identifier of id ext
+
 
 (* statements *)
 type stat =
@@ -113,11 +119,17 @@ type stat =
   (* block of statements { ... } *)
   | AST_block of stat ext list
 
-  (* assignment  lvalue = expr *)
+  (* assignment lvalue = expr *)
   | AST_assign of (id ext) * (int_expr ext)
+
+  (* for partitioning purpose *)
+  | AST_assign_bool of (id ext) * (bool_expr ext)
 
   (* assignment lvalue op= expr *)
   | AST_assign_op of (id ext) * int_binary_op * (int_expr ext)
+
+  (* for partitioning purpose *)
+  | AST_assign_op_bool of (id ext) * bool_binary_op * (bool_expr ext)
 
   (* increment lvalue += cst *)
   | AST_increment of (id ext) * int
@@ -167,8 +179,10 @@ type stat =
 and var_decl = (typ ext) (* type *) * (var_init list) (* variable list *)
 
 (* each declared variable has an optional initializer *)
-and var_init = (id ext) (* declared variable *) *
-               (int_expr ext option)  (* initializer *)
+and var_init = (* declared variable *)
+               (id ext) *
+               (* for partitionin purpose *)
+               (int_expr ext, bool_expr ext) Either.t option 
 
 
 (* function declaration

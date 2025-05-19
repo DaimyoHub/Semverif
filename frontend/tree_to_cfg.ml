@@ -232,6 +232,14 @@ and bool_expr (env : env) (expr : AbstractSyntax.bool_expr) :
       (env, [], CFG_bool_const f)
   | AST_bool_rand ->
       (env, [], CFG_bool_rand)
+  | AST_bool_identifier (id, x) ->
+      let var =
+        try StringMap.find id env.env_vars
+        with Not_found ->
+          failwith
+            (Printf.sprintf "unknown variable %s at %s" id (string_of_extent x))
+      in
+      (env, [], CFG_bool_var var)
 
 (* Translate a call. *)
 
@@ -270,6 +278,18 @@ let decls (env : env) (((t, _), l) : var_decl) : env * inst ext list =
     (fun (env, inst) ((id, x), init) ->
       let var = create_var id x t in
       let env1 = add_to_vars env var in
+      match init with
+      | None -> 
+          let env2, before, e = int_expr env1 (AST_int_const ("0", x)) in
+          (env2, before @ [(CFG_assign (var, e), x)] @ inst)
+      | Some (Either.Left (expr, x1)) ->
+          let env2, before, e = int_expr env1 expr in
+          (env2, before @ [(CFG_assign (var, e), x1)] @ inst)
+      | Some (Either.Right (expr, x1)) ->
+          let env2, before, e = bool_expr env1 expr in
+          (env2, before @ [(CFG_assign_bool (var, e), x1)] @ inst))
+
+      (*
       let expr, ext =
         match init with
         | None ->
@@ -279,6 +299,7 @@ let decls (env : env) (((t, _), l) : var_decl) : env * inst ext list =
       in
       let env2, before, e = int_expr env1 expr in
       (env2, before @ [(CFG_assign (var, e), ext)] @ inst) )
+      *)
     (env, []) l
 
 (*
@@ -311,6 +332,19 @@ let rec stat (env : env) (entry : node) (exit : node) (s : stat) : env =
       in
       add_arc entry1 exit (CFG_assign (var, e1)) ;
       env1
+  | AST_assign_bool ((id, x), (expr, _)) ->
+      (* translate expression *)
+      let env1, before, e1 = bool_expr env expr in
+      (* entry --[before]--> entry1 --[assign] --> exit *)
+      let entry1 = append_inst entry before in
+      let var =
+        try StringMap.find id env1.env_vars
+        with Not_found ->
+          failwith
+            (Printf.sprintf "unknown variable %s at %s" id (string_of_extent x))
+      in
+      add_arc entry1 exit (CFG_assign_bool (var, e1)) ;
+      env1
   | AST_increment ((id, x), v) ->
       (* x++ is translated as x = x + 1 *)
       let var =
@@ -338,6 +372,20 @@ let rec stat (env : env) (entry : node) (exit : node) (s : stat) : env =
       add_arc entry1 exit
         (CFG_assign (var, CFG_int_binary (op, CFG_int_var var, e))) ;
       env1
+  | AST_assign_op_bool ((id, x), op, (expr, _)) ->
+      (* x +=  expr is translated as x = x + expr *)
+      let env1, before, e = bool_expr env expr in
+      let entry1 = append_inst entry before in
+      let var =
+        try StringMap.find id env1.env_vars
+        with Not_found ->
+          failwith
+            (Printf.sprintf "unknown variable %s at %s" id (string_of_extent x))
+      in
+      add_arc entry1 exit
+        (CFG_assign_bool (var, CFG_bool_binary (op, CFG_bool_var var, e))) ;
+      env1
+
   | AST_assert (expr, ext) ->
       (* entry --[before]--> entry1 --[assert] --> exit *)
       let env1, before, e = bool_expr env expr in

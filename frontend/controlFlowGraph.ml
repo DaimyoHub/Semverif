@@ -66,6 +66,8 @@ type bool_expr =
   | CFG_bool_const of bool
   (* non-deterministic choice *)
   | CFG_bool_rand
+  (* for partitioning purpose *)
+  | CFG_bool_var of var
 
 (* Instructions *)
 (* ************ *)
@@ -84,6 +86,7 @@ type inst =
   | CFG_skip of string
   (* assignment *)
   | CFG_assign of var * int_expr
+  | CFG_assign_bool of var * bool_expr
   (* guard: test that must be satisfied to make a transition *)
   | CFG_guard of bool_expr
   (* assertion: it is an error if the test is not satisfied *)
