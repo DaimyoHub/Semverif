@@ -106,7 +106,9 @@ module type PARTIAL_VALUE_DOMAIN =
   (* binary operation *)
   val binary : t -> t -> int_binary_op -> t
 
-    val join : t -> t -> t
+  val compare : t -> t -> compare_op -> t * t
+  
+  val join : t -> t -> t
 
   val meet : t -> t -> t
 
@@ -127,9 +129,11 @@ module type PARTIAL_VALUE_DOMAIN =
 end
     
 
-module Make (D : PARTIAL_VALUE_DOMAIN)  =
+module Make (D : PARTIAL_VALUE_DOMAIN) : VALUE_DOMAIN with type t = D.t  =
   struct
-    let bwd_unary x op = D.unary op x
+    include D
+    
+    let bwd_unary x op z = D.unary z op 
     let bwd_binary x y op z = match op with
       | AST_PLUS -> D.binary z x (AST_MINUS), D.binary z y (AST_MINUS)
       | AST_MINUS -> D.binary z x (AST_PLUS), D.binary z y (AST_PLUS)
