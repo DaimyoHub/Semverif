@@ -82,3 +82,70 @@ module type VALUE_DOMAIN = sig
   val pp : Format.formatter -> t -> unit
 end
 
+module type PARTIAL_VALUE_DOMAIN =
+  sig
+  (* type of abstract elements *)
+  (* an element of type t abstracts a set of integers *)
+  type t
+
+  (* unrestricted value: [-oo,+oo] *)
+  val top : t
+
+  (* bottom value: empty set *)
+  val bottom : t
+
+  (* constant: {c} *)
+  val const : Z.t -> t
+
+  (* interval: [a,b] *)
+  val rand : Z.t -> Z.t -> t
+
+  (* unary operation *)
+  val unary : t -> int_unary_op -> t
+
+  (* binary operation *)
+  val binary : t -> t -> int_binary_op -> t
+
+    val join : t -> t -> t
+
+  val meet : t -> t -> t
+
+  (* widening *)
+  val widen : t -> t -> t
+
+  (* narrowing *)
+  val narrow : t -> t -> t
+
+  (* subset inclusion of concretizations *)
+  val leq : t -> t -> bool
+
+  (* check the emptiness of the concretization *)
+  val is_bottom : t -> bool
+
+  (* print abstract element *)
+  val pp : Format.formatter -> t -> unit
+end
+    
+
+module Make (D : PARTIAL_VALUE_DOMAIN)  =
+  struct
+    let bwd_unary x op = D.unary op x
+    let bwd_binary x y op z = match op with
+      | AST_PLUS -> D.binary z x (AST_MINUS), D.binary z y (AST_MINUS)
+      | AST_MINUS -> D.binary z x (AST_PLUS), D.binary z y (AST_PLUS)
+      | AST_MULTIPLY -> D.binary z x (AST_DIVIDE), D.binary z y (AST_DIVIDE)
+      | AST_DIVIDE ->
+         (* si x / y = z alors
+            x = z*y et, y = 0 ou y = x/z, à arondissement près
+         *)
+         let round = D.rand (Z.neg (Z.one)) Z.one in
+         let z = D.binary z round AST_PLUS in
+         D.binary z x (AST_MULTIPLY)
+         ,
+           D.binary
+             (D.binary x z (AST_DIVIDE))
+             (D.const (Z.zero))
+             AST_PLUS
+      | AST_MODULO -> assert false (* TODO *) 
+  end
+
