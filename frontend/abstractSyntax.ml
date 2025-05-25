@@ -65,6 +65,13 @@ type compare_op =
   | AST_LESS_EQUAL    (* e <= e *)
   | AST_GREATER       (* e > e *)
   | AST_GREATER_EQUAL (* e >= e *)
+let negate_compare_op = function
+  | AST_EQUAL -> AST_NOT_EQUAL
+  | AST_NOT_EQUAL -> AST_EQUAL
+  | AST_GREATER -> AST_LESS_EQUAL
+  | AST_LESS -> AST_GREATER_EQUAL
+  | AST_GREATER_EQUAL -> AST_LESS
+  | AST_LESS_EQUAL -> AST_GREATER
 
 type bool_binary_op =
   | AST_AND           (* e && e *)
