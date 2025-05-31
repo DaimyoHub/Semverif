@@ -108,8 +108,8 @@ module Make (D : VALUE_DOMAIN) (V : VARS) =
     | CFG_compare (op, lhs, rhs) ->
         CFG_compare(negate_compare_op op, lhs, rhs) |> guard env 
     | CFG_bool_unary (AST_NOT, expr) -> guard env expr
-    | CFG_bool_binary (AST_OR, lhs, rhs) -> join (guard env lhs) (guard env rhs)
-    | CFG_bool_binary (AST_AND, lhs, rhs) -> meet (guard env lhs) (guard env rhs)
+    | CFG_bool_binary (AST_OR, lhs, rhs) -> meet (negate env lhs) (negate env rhs)
+    | CFG_bool_binary (AST_AND, lhs, rhs) -> join (negate env lhs) (negate env rhs)
 
   let leq lhs rhs =
     Env.for_all
