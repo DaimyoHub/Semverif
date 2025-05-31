@@ -57,3 +57,8 @@ module type DOMAIN = sig
   (* prints *)
   val pp : Format.formatter -> t -> unit
 end
+
+module type DOMAIN_BWD = sig
+  include DOMAIN
+  val assign_bwd : t -> var -> int_expr -> t -> t
+end

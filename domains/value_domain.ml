@@ -133,7 +133,8 @@ module Make (D : PARTIAL_VALUE_DOMAIN) : VALUE_DOMAIN with type t = D.t  =
   struct
     include D
     
-    let bwd_unary x op z = D.unary z op 
+    let bwd_unary x op z = D.unary z op
+    
     let bwd_binary x y op z = match op with
       | AST_PLUS -> D.binary z x (AST_MINUS), D.binary z y (AST_MINUS)
       | AST_MINUS -> D.binary z x (AST_PLUS), D.binary z y (AST_PLUS)
@@ -146,10 +147,10 @@ module Make (D : PARTIAL_VALUE_DOMAIN) : VALUE_DOMAIN with type t = D.t  =
          let z = D.binary z round AST_PLUS in
          D.binary z x (AST_MULTIPLY)
          ,
-           D.binary
-             (D.binary x z (AST_DIVIDE))
-             (D.const (Z.zero))
-             AST_PLUS
+         D.binary
+           (D.binary x z (AST_DIVIDE))
+           (D.const (Z.zero))
+           AST_PLUS
       | AST_MODULO -> assert false (* TODO *) 
   end
 

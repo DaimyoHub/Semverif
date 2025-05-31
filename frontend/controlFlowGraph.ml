@@ -200,7 +200,7 @@ module FuncHash = Hashtbl.Make (Func)
 
 type cfg =
   { cfg_vars: var list (* list of all the variables *)
-  ; cfg_funcs: func list (* list of all the functions *)
+  ; cfg_funcs: func list (* list o all the functions *)
   ; cfg_nodes: node list (* list of all the nodes in the program *)
   ; cfg_arcs: arc list (* list of all the arcs in the program *)
   ; cfg_init_entry: node (* first node of code initializing global variables *)
