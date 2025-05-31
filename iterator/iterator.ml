@@ -74,12 +74,16 @@ module Iterator (D: Domains__.Domain.DOMAIN) = struct
     let env = NodeMap.find arc.arc_src map in
     match arc.arc_inst with
       | CFG_skip _ -> env
-      | CFG_assign(var,e) -> D.assign env var e 
+      | CFG_assign(var,e) -> D.assign env var e
+      | CFG_assign_bool _ -> assert false (* TODO *) 
       | CFG_guard b -> D.guard env b
+      | CFG_assert(b,_) ->
+         if D.guard env b = D.bottom
+         then D.bottom
+         else env 
       | CFG_call f ->
          let map = compute (init_wl f.func_entry) (NodeMap.add f.func_entry env map) wp in
          NodeMap.find f.func_exit map 
-      | _ -> failwith "todo!"
 
     
   let iterate cfg = 
