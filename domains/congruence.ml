@@ -1,3 +1,14 @@
+(* 
+   Semantics and Applications to Verification course's project
+   École Normale Supérieur
+
+   Authors : 
+     - Ilian Woerly : ilian.woerly@universite-paris-saclay.fr
+     - Alexis Pocquet : alexis.pocquet@universite-paris-saclay.fr
+ *)
+
+(* Congruence domain's implementation *)
+
 open States
 open Frontend.AbstractSyntax
 
@@ -115,8 +126,11 @@ let narrow lhs rhs =
   | Ctop, _ -> rhs
   | _ -> lhs
 
-let widen lhs rhs = Ctop
-
 let is_bottom = (=) Cbot
 
-let pp fmt c = ()
+let pp fmt c =
+  Format.fprintf fmt "%s"
+    (match c with
+      | Ctop -> "Z"
+      | Cbot -> "empty"
+      | Cgr (a, b) -> string_of_int a ^ "Z + " ^ string_of_int b)

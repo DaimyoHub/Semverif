@@ -28,7 +28,7 @@ let args =
     , " Print the cfg in this file (default is cfg.dot)" )
   ; ( "--domain"
     , Set_string domain
-    , " Select the abstract domain (constants/interval)" ) ]
+    , " Select the abstract domain : [part-](interval|congruence|sign|product)" ) ]
   |> align
 
 let usage = "usage: ./analyzer.exe [options] filename.c"

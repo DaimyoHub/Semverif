@@ -1,3 +1,14 @@
+(* 
+   Semantics and Applications to Verification course's project
+   École Normale Supérieur
+
+   Authors : 
+     - Ilian Woerly : ilian.woerly@universite-paris-saclay.fr
+     - Alexis Pocquet : alexis.pocquet@universite-paris-saclay.fr
+ *)
+
+(* Non relational functor implementation *)
+
 open Domain
 open Value_domain
 open Frontend.ControlFlowGraph
@@ -43,7 +54,8 @@ module Make (D : VALUE_DOMAIN) (V : VARS) =
   let widen = map2 D.widen |> parallel
   let narrow = map2 D.narrow |> parallel
 
-  (* Si l'on obtient une contradiction localement, on la propage. Le meet n'est pas un opérateur parallèle) *)
+  (* Si l'on obtient une contradiction localement, on la propage. Le meet n'est pas un
+     opérateur parallèle) *)
   let meet lhs rhs =
     try
       map2
@@ -126,7 +138,7 @@ module Make (D : VALUE_DOMAIN) (V : VARS) =
       (fun var state ->
         Format.fprintf fmt "\t%s: " var.var_name;
         D.pp fmt state;
-        print_endline "")
+        Format.fprintf fmt "\n")
       env;
     print_endline "}"
  end

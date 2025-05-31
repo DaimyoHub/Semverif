@@ -1,4 +1,4 @@
-int main() {
+void main() {
   int x = rand(0, 100);
   bool b =b false;
 

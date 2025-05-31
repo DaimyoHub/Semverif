@@ -162,7 +162,7 @@ let widen lhs rhs =
       congr = Congruence.widen lhs.congr rhs.congr;
     }
 
-let narrow lhs rhs = failwith "todo"
+let narrow = meet
 
 let leq lhs rhs =
   match lhs, rhs with
@@ -185,7 +185,9 @@ let pp fmt p =
     | Prd { intvl; sign; congr } -> begin
         Format.fprintf fmt "{";
         Interval.pp fmt intvl;
+        Format.fprintf fmt ", ";
         Sign.pp fmt sign;
+        Format.fprintf fmt ", ";
         Congruence.pp fmt congr;
         Format.fprintf fmt "}"
       end

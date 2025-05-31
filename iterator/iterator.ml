@@ -14,10 +14,6 @@
 open Frontend
 open ControlFlowGraph
 
-
-
-
-
 module Iterator (D: Domains__.Domain.DOMAIN) = struct
   module Worklist = NodeSet
   
@@ -93,6 +89,3 @@ module Iterator (D: Domains__.Domain.DOMAIN) = struct
     
     compute wl envs wp   
 end
-
-
-
