@@ -7,7 +7,9 @@
 open Frontend
 open ControlFlowGraph
 
-let iterate cfg =
+module type DOMAIN = Domains.Domain.DOMAIN
+
+let iterate (module Dom : DOMAIN) cfg =
   let _ = Random.self_init () in
   let iter_arc arc : unit = match arc.arc_inst with _ -> failwith "TODO" in
   let iter_node node : unit = Format.printf "<%i>: ⊤@ " node.node_id in

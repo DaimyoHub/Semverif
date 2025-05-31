@@ -83,7 +83,7 @@ module Make (D : DOMAIN) :
    *)
   let split state var expr =
     let curr_part = Hashtbl.find state.parts state.key in
-    Hashtbl.add state.parts (var :: state.key) (D.guard curr_part expr)
+    Hashtbl.replace state.parts (var :: state.key) (D.guard curr_part expr)
 
   let guard state expr =
     let curr_part = Hashtbl.find state.parts state.key in
