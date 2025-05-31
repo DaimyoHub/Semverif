@@ -77,8 +77,7 @@ module Make (D : VALUE_DOMAIN) (V : VARS) =
        VarMap.add var (D.meet var1 (VarMap.find var x)) x
     | CFG_int_var _ | CFG_int_rand _ | CFG_int_const _ -> x
   
-       
-
+      
   let rec ensures e v env = match e with
     | CFG_int_binary(op,e1,e2) ->
        let v1' = eval env e1 in
