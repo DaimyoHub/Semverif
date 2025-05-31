@@ -62,3 +62,11 @@ module type DOMAIN_BWD = sig
   include DOMAIN
   val assign_bwd : t -> var -> int_expr -> t -> t
 end
+
+module type DOMAIN_PART = sig
+  include DOMAIN
+
+  val add_bool_cond : t -> string -> unit
+  val rm_bool_cond :  t -> string -> unit
+  val split :         t -> string -> bool_expr -> unit
+end

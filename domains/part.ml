@@ -15,16 +15,7 @@ open Domain
 (* The design of the partitioning domain is a bit dirty because I mixed functional
    features of a usual domain and the imperative features induced by the way I'm dealing
    with partitions and keys. *)
-module Make (D : DOMAIN) : 
- sig
-  include DOMAIN
-
-  val add_bool_cond : t -> string -> unit
-  val rm_bool_cond :  t -> string -> unit
-  val get_curr_part : t -> D.t
-  val split :         t -> string -> bool_expr -> unit
- end
-  =
+module Make (D : DOMAIN) : DOMAIN_PART =
  struct
   type key = string list
 

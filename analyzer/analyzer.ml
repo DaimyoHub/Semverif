@@ -17,6 +17,8 @@ open Domains
 module type VARS = Domain.VARS
 module type DOMAIN = Domain.DOMAIN
 
+type exn += Part_tag
+
 let usage () = Arg.usage Options.args Options.usage; assert false
 
 let parse_argv argv =
@@ -28,29 +30,17 @@ let parse_argv argv =
   loop 0
 
 let parse_domain (module V : VARS) dom : (module DOMAIN) =
-  if String.starts_with ~prefix: "part-" dom then
-    match String.split_on_char '-' dom with
-    | _ :: d :: [] -> 
-      if d = "interval" then
-        (module Make_part_interval (V))
-      else if d = "congruence" then
-        (module Make_part_congruence (V))
-      else if d = "sign" then
-        (module Make_part_sign (V))
-      else if d = "product" then
-        (module Make_part_product (V))
-      else usage ()
-    | _ -> usage ()
-  else
-    if dom = "interval" then
-      (module Make_nr_interval (V))
-    else if dom = "congruence" then
-      (module Make_nr_congruence (V))
-    else if dom = "sign" then
-      (module Make_nr_sign (V))
-    else if dom = "product" then
-      (module Make_nr_product (V))
-    else usage ()
+  if dom = "interval" then
+    (module Make_nr_interval (V))
+  else if dom = "congruence" then
+    (module Make_nr_congruence (V))
+  else if dom = "sign" then
+    (module Make_nr_sign (V))
+  else if dom = "product" then
+    (module Make_nr_product (V))
+  else if dom = "part" then
+    raise Part_tag
+  else usage ()
 
 let get_domain (module V : VARS) domains : (module DOMAIN) =
   match domains with
@@ -66,8 +56,16 @@ let doit filename =
 
   let doms = parse_argv Sys.argv in
   let module V : VARS = struct let support = cfg.cfg_vars end in
-  let (module Dom : DOMAIN) = get_domain (module V) doms in
-  Iterator.iterate (module Dom) cfg
+
+  try
+    try 
+      let (module Dom : DOMAIN) = get_domain (module V) doms in
+      Iterator.iterate (module Dom : DOMAIN) cfg
+    with Part_tag -> Iterator.iterate_part cfg
+  with Iterator.Analysis_AssertionFailed (ext, state) ->
+    let pos, _ = ext in
+    Printf.printf "File \"%s.c\", line %d: Assertion failure.\n" filename pos.pos_lnum;
+    Printf.printf "%s" state
 
 (* parses arguments to get filename *)
 let main () =
