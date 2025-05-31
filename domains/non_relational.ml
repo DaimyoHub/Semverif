@@ -117,7 +117,7 @@ module Make (D : VALUE_DOMAIN) (V : VARS) =
       (fun var state ->
         Format.fprintf fmt "\t%s: " var.var_name;
         D.pp fmt state;
-        print_endline "")
+        Format.fprintf fmt "\n")
       env;
     print_endline "}"
  end

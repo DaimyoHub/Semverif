@@ -133,9 +133,15 @@ module Make (D : DOMAIN) :
     print_endline "{\n";
     Hashtbl.iter
       (fun key part ->
-        List.iter (fun var -> Format.fprintf fmt "%s: %s; " var "1") key;
-        print_endline "";
-        D.pp fmt part)
+        Format.fprintf fmt "[";
+        List.iter
+          (fun var ->
+            Format.fprintf fmt "%s" var;
+            Format.fprintf fmt ", ")
+          key;
+        Format.fprintf fmt "] : ";
+        D.pp fmt part;
+        Format.fprintf fmt "\n")
       state.parts
  end
 
