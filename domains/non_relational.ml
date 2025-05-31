@@ -52,7 +52,29 @@ module Make (D : VALUE_DOMAIN) (V : VARS) =
           if D.is_bottom z then raise Not_found else z)
         lhs rhs
     with Not_found -> bottom 
+
+(*  let assign_bwd x var e r = match e with
+    (* l'env x apres l'assignation de var à e est r
+       ex:
+       env = x
+       var := e1 op e2 
+       env = r
+
+       si x apparait dans e1 ou e2 alors on peut dire des trucs sur l'ancienne valeur de x.
+     *)
+      
+    | CFG_int_binary(op,e1, e2) ->
+       let v1', v2' = D.bwd_binary (eval x e1) (eval x e2) op (VarMap.find var r) in
+       go e1 e1' var*)
+
+(*  let go e1 e1' var 
+    | CFG_int_var x when x = var -> 
        
+    | CFG_int_const _ | CFG_int_rand _ -> x
+
+  
+    | _ -> assert false
+           *)
   let rec ensures e v env = match e with
     | CFG_int_binary(op,e1,e2) ->
        let v1' = eval env e1 in
@@ -88,7 +110,6 @@ module Make (D : VALUE_DOMAIN) (V : VARS) =
     | CFG_bool_unary (AST_NOT, expr) -> guard env expr
     | CFG_bool_binary (AST_OR, lhs, rhs) -> join (guard env lhs) (guard env rhs)
     | CFG_bool_binary (AST_AND, lhs, rhs) -> meet (guard env lhs) (guard env rhs)
-
 
   let leq lhs rhs =
     Env.for_all

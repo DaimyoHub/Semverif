@@ -21,3 +21,4 @@ type congr = Cbot | Ctop | Cgr of int * int
 
 (* Reduced product abstract state's type *)
 type prod = Prd of { intvl : intvl; sign : sign; congr : congr } | Pbot
+            (* concrete type *)
