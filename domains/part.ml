@@ -8,10 +8,10 @@ module Make (D : DOMAIN) :
  sig
   include DOMAIN
 
-  val add_bool_cond : t -> string -> bool -> unit
-  val rm_bool_cond : t -> string -> unit
+  val add_bool_cond : t -> string -> unit
+  val rm_bool_cond :  t -> string -> unit
   val get_curr_part : t -> D.t
-  val split : t -> string -> bool_expr -> unit
+  val split :         t -> string -> bool_expr -> unit
  end
   =
  struct
@@ -48,19 +48,28 @@ module Make (D : DOMAIN) :
   (* These functions should be used when passing through the condition of a conditional
      statement. For instance 
 
-     if (b1) {        <-- add_bool_cond b1 true
-       if (!b2) {     <-- add_bool_cond b2 false
+     if (b1) {            <-- add_bool_cond st "b1"
+       if (!b2) {         <-- add_bool_cond st "b2"
          /* ... */    
-       }              <-- rm_bool_cond b2
-     }                <-- rm_bool_cond b1
+       }                  <-- rm_bool_cond st "b2"
+     }                    <-- rm_bool_cond st "b1"
      
      This allows to keep track of the key to access the good partition. *)
-  let add_bool_cond state var value = state.key <- var :: state.key
+  let add_bool_cond state var = state.key <- var :: state.key
   let rm_bool_cond state var = state.key <- List.filter (fun v -> v <> var) state.key
 
   (* This function finds the partition associated with the current key. *)
   let get_curr_part state = Hashtbl.find state.parts state.key
 
+  (* Splitting the partitions occurs when a new boolean variable is associated with a
+     conditional expression. For instance
+
+     bool b1 = x > 1;     <-- split st "b1" <x > 1>
+     bool b2 = x == 1;    <-- split st "b2" <x == 1>
+
+     In the first line, we create a partition in which the variable b1 is true and in 
+     which we consider that x > 1. It works the same way for the second line.
+   *)
   let split state var expr =
     let curr_part = Hashtbl.find state.parts state.key in
     Hashtbl.add state.parts (var :: state.key) (D.guard curr_part expr)
@@ -118,3 +127,35 @@ module Make (D : DOMAIN) :
         D.pp fmt part)
       state.parts
  end
+
+(*
+   Full example : We consider a simple program in which the value of a variable x depends
+   on the value of a boolean variable b.
+
+   int x = rand(0, 100);
+   bool b = x > 0;
+   if (b) {
+     assert(x != 0);
+   }
+
+   Without any partitioning domain, the analyzer fails to prove the assertion in the
+   conditional statement.
+
+   int x = rand(0, 100);
+   bool b = x > 0;
+   if (b) {
+     assert(x != 0);      <-- KO because the analyzer does not compute the relation
+   }                          between x and b
+
+   With the partitioning domain implemented above, the goal is to be able to check this
+   assertion, by considering partitions of the abstract state of x determined by the
+   value of b. In other word, it should be able to compute invariants in conditional
+   statements such that their condition is an indirection as a boolean variable to a 
+   condition on the assertion's variables.
+
+   int x = rand(0, 100);
+   bool b = x > 0;
+   if (b) {
+     assert(x != 0);      <-- OK because the analyzer computes "b = true -> x > 0"
+   }
+ *)
