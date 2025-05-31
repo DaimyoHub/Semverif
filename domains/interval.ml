@@ -207,7 +207,7 @@ let rec compare lhs rhs op =
 	  | AST_GREATER_EQUAL -> let a, b = compare rhs lhs AST_LESS_EQUAL in b, a
   in let ra, rb = inner lhs rhs op in to_top ra, to_top rb
 
-let narrow lhs rhs = failwith "todo"
+let narrow = meet
 
 let widen lhs rhs =
   match to_top lhs, to_top rhs with

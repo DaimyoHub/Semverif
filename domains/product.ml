@@ -162,7 +162,7 @@ let widen lhs rhs =
       congr = Congruence.widen lhs.congr rhs.congr;
     }
 
-let narrow lhs rhs = failwith "todo"
+let narrow = meet
 
 let leq lhs rhs =
   match lhs, rhs with
